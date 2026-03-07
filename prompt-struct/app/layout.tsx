@@ -3,6 +3,15 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/app/components/auth/SessionProvider";
 import { Navbar } from "@/app/components/ui/Navbar";
+import { Instrument_Serif } from "next/font/google";
+import { Footer } from "./components/ui/Footer";
+
+const instrumentSerif = Instrument_Serif({
+  weight: ["400"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-instrument-serif",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,18 +35,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={instrumentSerif.variable}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-50`}
+        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} bg-white`}
       >
         <SessionProvider>
           <Navbar />
+          {/* max-w-5xl ONLY wraps page content, NOT footer */}
           <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
             {children}
           </main>
+          {/* Footer is outside main — full width */}
+          <Footer />
         </SessionProvider>
       </body>
     </html>
   );
 }
-
