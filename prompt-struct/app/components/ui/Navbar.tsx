@@ -17,11 +17,11 @@ export function Navbar() {
   ];
 
   return (
-    <header className="border-b border-zinc-200 bg-white backdrop-blur-sm">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-sm">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white">
+          <span className="flex bg-primary h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white">
             <svg
               width="16"
               height="16"
@@ -64,7 +64,7 @@ export function Navbar() {
         {/* Right: Dashboard Button */}
         <Link
           href="/dashboard"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
         >
           Dashboard
         </Link>

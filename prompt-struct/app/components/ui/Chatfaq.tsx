@@ -106,7 +106,7 @@ function ChatBubble({
         <div
           className={`relative max-w-sm px-5 py-3.5 text-sm leading-relaxed shadow-sm ${
             isUser
-              ? "bg-blue-600 text-white rounded-2xl rounded-br-none"
+              ? "bg-primary text-white rounded-2xl rounded-br-none"
               : "bg-blue-50 text-blue-900 border border-blue-200 rounded-2xl rounded-bl-none"
           }`}
         >

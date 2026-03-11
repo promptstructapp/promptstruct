@@ -31,7 +31,7 @@ const plans = [
     priceColor: "text-blue-500",
     description: "Perfect for getting started",
     cta: "Start Trail",
-    ctaStyle: "bg-blue-600 text-white hover:bg-blue-700",
+    ctaStyle: "bg-primary text-white hover:bg-blue-700",
     ctaNote: "Pro trial — cancel anytime",
     features: [
       { text: "1000 JSON conversions/month", status: "green" },
@@ -146,7 +146,9 @@ export function PricingComparison() {
           >
             {/* Plan name + subtitle */}
             <div>
-              <h3 className={`text-xl font-semibold ${plan.nameColor}`}>
+              <h3
+                className={`text-xl font-serif font-semibold ${plan.nameColor}`}
+              >
                 {plan.name}
               </h3>
               <p className="text-sm text-zinc-400 mt-0.5">{plan.subtitle}</p>

@@ -128,7 +128,7 @@ export function Footer() {
             {/* Left */}
             <div className="flex flex-col gap-4 max-w-xs">
               <Link href="/" className="flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-white">
                   <svg
                     width="14"
                     height="14"

@@ -15,7 +15,7 @@ export function CTA() {
       <div className="flex items-center justify-center gap-3">
         <Link
           href="#convert"
-          className="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          className="rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
         >
           Try it free
         </Link>
