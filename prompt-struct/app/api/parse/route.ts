@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { checkUserQuota, incrementUserQuota } from "@/app/lib/utils/rateLimiter";
+import { authOptions } from "../../lib/auth/auth";
+import {
+  checkUserQuota,
+  incrementUserQuota,
+} from "@/app/lib/utils/rateLimiter";
 import { saveConversion } from "@/app/lib/db";
 import { generateSceneJsonFromPrompt } from "@/app/lib/utils/llm";
 
@@ -42,11 +45,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!quota) return "";
+
     const jsonOutput = await generateSceneJsonFromPrompt(prompt);
 
     await incrementUserQuota(email);
 
-    if (quota.user.plan === "pro") {
+    if (quota?.user?.plan === "pro") {
       try {
         await saveConversion(quota.user.id, prompt, jsonOutput);
       } catch (err) {
@@ -55,9 +60,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({
-      output: jsonOutput,
+      result: jsonOutput,
       quota: {
-        plan: quota.user.plan,
+        plan: quota?.user?.plan,
         remaining: quota.remaining,
       },
     });
@@ -69,4 +74,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
