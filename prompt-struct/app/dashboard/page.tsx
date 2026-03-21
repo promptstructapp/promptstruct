@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "../lib/auth/auth";
 import { UsageDisplay } from "@/app/components/ui/UsageDisplay";
 
 async function fetchUsage() {
@@ -16,7 +16,7 @@ async function fetchUsage() {
 }
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+  const session = (await getServerSession(authOptions)) ?? {};
 
   if (!session || !session.user?.email) {
     redirect("/");
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
 
   const plan =
     (usage?.plan as string | undefined) ??
-    ((session.user as any).plan as string | undefined) ??
+    (session.user?.plan as string | undefined) ??
     "free";
 
   const history = (usage?.history as any[]) ?? [];

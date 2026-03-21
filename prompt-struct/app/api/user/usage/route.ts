@@ -12,11 +12,9 @@ export async function GET() {
     }
 
     const email = session.user.email;
-
     const quota = await checkUserQuota(email);
-    const userId = quota.user?.id ?? (session.user as any).id;
-
-    let history: any[] = [];
+    const userId: string | undefined = session.user.id;
+    let history: unknown[] = [];
     if (userId) {
       try {
         history = await getUserHistory(userId, 10);
@@ -38,4 +36,3 @@ export async function GET() {
     );
   }
 }
-

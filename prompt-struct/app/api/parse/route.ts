@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     await incrementUserQuota(email);
 
-    if (quota?.user?.plan === "pro") {
+    if (quota.user.plan === "pro" || quota.user.plan === "lifetime") {
       try {
         await saveConversion(quota.user.id, prompt, jsonOutput);
       } catch (err) {

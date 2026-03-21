@@ -1,11 +1,7 @@
-// app/lib/auth.ts
-// authOptions lives here — imported by both:
-//   app/api/auth/[...nextauth]/route.ts
-//   app/api/parse/route.ts
-// This avoids the circular-import issue with App Router + NextAuth v4.
-
+// app/lib/auth/auth.ts
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { findOrCreateUser } from "@/app/lib/db";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -19,8 +15,19 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
+    // ✅ NEW: auto-create user in Supabase on first Google login
+    async signIn({ user }) {
+      if (user.email) {
+        await findOrCreateUser(user.email, {
+          name: user.name ?? undefined,
+          image: user.image ?? undefined,
+        });
+      }
+      return true;
+    },
+
+    // existing — unchanged
     async session({ session, token }) {
-      // Forward the user id from the JWT into the session object
       if (session.user && token.sub) {
         (session.user as typeof session.user & { id: string }).id = token.sub;
       }
