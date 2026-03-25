@@ -1,0 +1,21 @@
+# PromptStruct
+
+PromptStruct converts natural language prompts into structured JSON for AI image generation tools like Midjourney, DALL·E, and Stable Diffusion.
+
+## Key Features
+- Free tier: 10 conversions/month, no signup.
+- Pro: unlimited conversions, export formats (JSON/YAML/CSV), prompt history.
+- Extracts subject, lighting, environment, mood, pose, clothing, and more.
+- Adaptive schema – only categories present in the prompt appear.
+- Confidence scores for each extracted element.
+
+## How to Use
+1. Paste your prompt.
+2. Click Generate.
+3. Copy or download the JSON.
+
+## Links
+- Website: <https://promptstruct.vercel.app>
+- Pricing: /pricing
+- FAQ: /faq
+- GitHub: [link]

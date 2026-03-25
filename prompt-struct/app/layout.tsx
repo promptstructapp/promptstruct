@@ -5,6 +5,7 @@ import { SessionProvider } from "@/app/components/auth/SessionProvider";
 import { Navbar } from "@/app/components/ui/Navbar";
 import { Instrument_Serif } from "next/font/google";
 import { Footer } from "./components/ui/Footer";
+import { Analytics } from "@vercel/analytics/react";
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -48,6 +49,7 @@ export default function RootLayout({
           {/* Footer is outside main — full width */}
           <Footer />
         </SessionProvider>
+        <Analytics />
       </body>
     </html>
   );
