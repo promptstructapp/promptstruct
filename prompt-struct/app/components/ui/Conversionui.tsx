@@ -201,6 +201,31 @@ export function ConversionUI() {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [quotaLoading, setQuotaLoading] = useState(false);
+
+  const isQuotaExceeded = remaining !== null && remaining <= 0;
+
+  useEffect(() => {
+    if (!session?.user?.email) return;
+
+    async function fetchQuota() {
+      setQuotaLoading(true);
+      try {
+        const res = await fetch("/api/user/usage");
+        if (res.ok) {
+          const data = await res.json();
+          setRemaining(data.quota?.remaining ?? null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch quota:", err);
+      } finally {
+        setQuotaLoading(false);
+      }
+    }
+
+    fetchQuota();
+  }, [session]);
 
   const charCount = prompt.length;
   const isValid = charCount >= 10 && charCount <= 1000;
@@ -226,7 +251,11 @@ export function ConversionUI() {
       const rawText = await res.text();
       console.log("[/api/parse] status:", res.status);
       console.log("[/api/parse] raw:", rawText.slice(0, 300));
-      let data: { error?: string; result?: object };
+      let data: {
+        error?: string;
+        result?: object;
+        quota?: { plan: string; remaining: number };
+      };
       try {
         data = JSON.parse(rawText);
       } catch {
@@ -238,6 +267,9 @@ export function ConversionUI() {
       }
       if (!res.ok) throw new Error(data.error || "Something went wrong");
       setOutput(data.result ?? null);
+      if (data.quota?.remaining !== undefined) {
+        setRemaining(data.quota.remaining);
+      }
     } catch (err: unknown) {
       const message =
         err instanceof Error
@@ -361,7 +393,7 @@ export function ConversionUI() {
           {/* Generate button */}
           <button
             onClick={handleGenerate}
-            disabled={!isValid || loading}
+            disabled={!isValid || loading || quotaLoading || isQuotaExceeded}
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? (
@@ -379,6 +411,8 @@ export function ConversionUI() {
                 </svg>
                 Generating…
               </>
+            ) : isQuotaExceeded ? (
+              "Monthly limit reached — Upgrade to Pro"
             ) : (
               <>
                 Generate Prompt
@@ -397,7 +431,21 @@ export function ConversionUI() {
               </>
             )}
           </button>
-
+          {session && remaining !== null && !isQuotaExceeded && (
+            <p className="text-xs text-zinc-400 text-center">
+              {remaining} conversion{remaining !== 1 ? "s" : ""} remaining this
+              month
+            </p>
+          )}
+          {isQuotaExceeded && (
+            <p className="text-xs text-red-400 text-center">
+              Monthly limit reached.{" "}
+              <a href="/pricing" className="underline hover:text-red-600">
+                Upgrade to Pro
+              </a>{" "}
+              for 1000 conversions/month.
+            </p>
+          )}
           {error && <p className="text-xs text-red-400 text-center">{error}</p>}
         </div>
 

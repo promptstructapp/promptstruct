@@ -2,107 +2,106 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "../lib/auth/auth";
 import { UsageDisplay } from "@/app/components/ui/UsageDisplay";
-
-async function fetchUsage() {
-  const res = await fetch(`${process.env.NEXTAUTH_URL ?? ""}/api/user/usage`, {
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    return null;
-  }
-
-  return res.json();
-}
+import { checkUserQuota } from "@/app/lib/utils/rateLimiter";
+import { getUserHistory } from "@/app/lib/db";
+import Link from "next/link";
+import { PLAN_LIMITS } from "../components/ui/UsageDisplay";
 
 export default async function DashboardPage() {
-  const session = (await getServerSession(authOptions)) ?? {};
+  const session = await getServerSession(authOptions);
 
   if (!session || !session.user?.email) {
     redirect("/");
   }
 
-  const usage = await fetchUsage();
+  const email = session.user.email;
 
-  const plan =
-    (usage?.plan as string | undefined) ??
-    (session.user?.plan as string | undefined) ??
-    "free";
+  // ✅ Call DB/quota functions directly — no HTTP round-trip, no auth issues
+  const [quotaResult] = await Promise.allSettled([
+    checkUserQuota(email),
+    getUserHistory("", 10), // will be replaced with user id below
+  ]);
 
-  const history = (usage?.history as any[]) ?? [];
+  const quota = quotaResult.status === "fulfilled" ? quotaResult.value : null;
+  console.log(quota);
+  const user = quota?.user ?? null;
+  const plan = user?.plan ?? "free";
+  const limit = plan === "lifetime" ? Infinity : (PLAN_LIMITS[plan] ?? 10);
+  const monthlyUsed = user?.monthly_used ?? 0;
+  const conversionsUsed = user?.conversions_used ?? 0;
+  const remaining = quota?.remaining ?? 0;
+
+  const quotaForDisplay = {
+    used: monthlyUsed,
+    limit: plan === "lifetime" ? null : limit,
+    remaining: plan === "lifetime" ? null : remaining,
+  };
 
   return (
     <div className="space-y-8">
-      <section className="space-y-2">
+      {/* Page header */}
+      <section className="space-y-1 mt-12">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">
           Dashboard
         </h1>
-        <p className="max-w-2xl text-sm text-zinc-600">
+        <p className="max-w-2xl text-sm text-zinc-500">
           Track your usage, review recent conversions, and explore upgrade
           options.
         </p>
       </section>
 
-      <div className="grid gap-6 md:grid-cols-[minmax(0,2fr),minmax(0,3fr)]">
-        <UsageDisplay plan={plan} quota={usage?.quota} />
+      <div className="grid gap-6 md:grid-cols-[minmax(0,2fr),minmax(0,3fr)] mb-32">
+        {/* Usage card */}
+        <UsageDisplay plan={plan} quota={quotaForDisplay} />
 
-        <section className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4">
+        {/* Plan & Limits card */}
+        <section className="space-y-3 rounded-xl border border-zinc-200 bg-white p-5">
           <div className="flex items-center justify-between gap-2">
             <div>
               <h2 className="text-sm font-semibold text-zinc-900">
-                Plan & Limits
+                Plan &amp; Limits
               </h2>
-              <p className="text-xs text-zinc-500">
-                Upgrade to unlock higher daily and monthly limits.
+              <p className="text-xs text-zinc-500 mt-0.5">
+                Upgrade to unlock higher monthly limits.
               </p>
             </div>
-            <button
-              type="button"
-              className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-medium text-white shadow hover:bg-zinc-800"
+            <Link
+              href="/pricing"
+              className="rounded-full bg-zinc-900 px-4 py-1.5 text-xs font-medium text-white shadow hover:bg-zinc-800 transition-colors"
             >
               View Pro plans
-            </button>
+            </Link>
           </div>
-          <ul className="space-y-1 text-xs text-zinc-600">
-            <li>• Free: 10 conversions per day.</li>
-            <li>• Pro: Up to 1000 conversions per month.</li>
-            <li>
-              • Priority access to new schema types and advanced controls.
-            </li>
+
+          {/* Live stat pills */}
+          <div className="flex flex-wrap gap-2 pt-1">
+            <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs text-zinc-600">
+              Plan:{" "}
+              <span className="font-semibold capitalize text-zinc-900">
+                {plan}
+              </span>
+            </span>
+            <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs text-zinc-600">
+              This month:{" "}
+              <span className="font-semibold text-zinc-900">
+                {monthlyUsed} used
+              </span>
+            </span>
+            <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs text-zinc-600">
+              All-time:{" "}
+              <span className="font-semibold text-zinc-900">
+                {conversionsUsed} conversions
+              </span>
+            </span>
+          </div>
+
+          <ul className="space-y-1 text-xs text-zinc-600 pt-1">
+            <li>• Free: 10 conversions per month.</li>
+            <li>• Pro: Up to 1,000 conversions per month + history saved.</li>
+            <li>• Lifetime: Unlimited conversions, pay once.</li>
           </ul>
         </section>
       </div>
-
-      <section className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-zinc-900">
-            Recent conversions
-          </h2>
-          <span className="text-xs text-zinc-500">
-            History will populate once a real database is connected.
-          </span>
-        </div>
-
-        {history.length === 0 ? (
-          <p className="text-xs text-zinc-500">
-            No conversion history yet. For now, history is a placeholder and
-            will be powered by the database later.
-          </p>
-        ) : (
-          <ul className="space-y-2 text-xs text-zinc-600">
-            {history.map((item) => (
-              <li
-                key={item.id}
-                className="rounded-lg border border-zinc-200 bg-zinc-50 p-2"
-              >
-                <p className="line-clamp-2 text-[11px] text-zinc-700">
-                  {item.prompt}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </div>
   );
 }

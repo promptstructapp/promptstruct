@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "../../../lib/auth/auth";
 import { checkUserQuota } from "@/app/lib/utils/rateLimiter";
 import { getUserHistory } from "@/app/lib/db";
 
@@ -13,7 +13,7 @@ export async function GET() {
 
     const email = session.user.email;
     const quota = await checkUserQuota(email);
-    const userId: string | undefined = session.user.id;
+    const userId: string | undefined = (session.user as any).id;
     let history: unknown[] = [];
     if (userId) {
       try {
@@ -25,7 +25,10 @@ export async function GET() {
 
     return NextResponse.json({
       plan: quota.user?.plan ?? "free",
-      quota,
+      quota: {
+        remaining: quota.remaining,
+        allowed: quota.allowed,
+      },
       history,
     });
   } catch (error) {

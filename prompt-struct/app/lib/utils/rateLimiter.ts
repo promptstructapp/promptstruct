@@ -1,11 +1,6 @@
 import { supabaseAdmin } from "@/app/lib/supabase/server";
 import { findOrCreateUser } from "@/app/lib/db";
-
-const PLAN_LIMITS: Record<string, number> = {
-  free: 10,
-  pro: 1000,
-  lifetime: Infinity,
-};
+import { PLAN_LIMITS } from "../../components/ui/UsageDisplay";
 
 function isNewMonth(lastResetDate: string): boolean {
   const last = new Date(lastResetDate);
@@ -23,8 +18,8 @@ export async function checkUserQuota(email: string) {
   if (user.plan === "lifetime") {
     return { allowed: true, remaining: Infinity, user };
   }
-
-  const limit = PLAN_LIMITS[user.plan] ?? PLAN_LIMITS.free;
+  const planLimit = PLAN_LIMITS[user.plan] ?? 0;
+  const limit = planLimit ?? PLAN_LIMITS.free;
   const resetNeeded = isNewMonth(user.last_reset_date);
   const monthlyUsed = resetNeeded ? 0 : user.monthly_used;
   const remaining = Math.max(0, limit - monthlyUsed);

@@ -8,26 +8,22 @@ import { useSession } from "next-auth/react";
 import { UsageDisplay } from "@/app/components/ui/UsageDisplay";
 
 type ParseResponse = {
-  output: unknown;
-  quota?: {
-    plan?: string;
-    remaining?: {
-      daily?: number;
-      monthly?: number;
-    };
-    user?: {
-      daily_requests_used?: number;
-      requests_used?: number;
-    };
-  };
+  result?: object;
   error?: string;
+  quota?: {
+    plan: string;
+    remaining: number;
+  };
 };
 
 export function ConversionForm() {
   const { data: session } = useSession();
   const [prompt, setPrompt] = useState("");
-  const [result, setResult] = useState<ParseResponse["output"]>(null);
-  const [quota, setQuota] = useState<ParseResponse["quota"] | undefined>();
+  const [result, setResult] = useState({});
+  const [quota, setQuota] = useState<{
+    plan: string;
+    remaining: number;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -51,7 +47,7 @@ export function ConversionForm() {
         body: JSON.stringify({ prompt }),
       });
 
-      const data = (await res.json()) as ParseResponse;
+      const data = await res.json();
 
       if (!res.ok) {
         setError(data.error ?? "Failed to convert prompt.");
@@ -102,7 +98,16 @@ export function ConversionForm() {
         </div>
         <div className="space-y-4">
           <JsonOutput data={result} />
-          <UsageDisplay plan={plan} quota={quota} />
+          <UsageDisplay
+            plan={quota?.plan ?? "free"}
+            quota={{
+              used: quota
+                ? (quota.plan === "pro" ? 1000 : 5) - quota.remaining
+                : 0,
+              limit: quota?.plan === "pro" ? 1000 : 5,
+              remaining: quota?.remaining ?? null,
+            }}
+          />
         </div>
       </div>
 
@@ -115,4 +120,3 @@ export function ConversionForm() {
     </div>
   );
 }
-

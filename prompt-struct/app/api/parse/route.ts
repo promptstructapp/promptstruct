@@ -8,7 +8,7 @@ import {
 import { saveConversion } from "@/app/lib/db";
 import { generateSceneJsonFromPrompt } from "@/app/lib/utils/llm";
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<NextResponse> {
   try {
     const session = await getServerSession(authOptions);
     if (!session || !session.user?.email) {
@@ -38,14 +38,12 @@ export async function POST(req: Request) {
     if (!quota.allowed) {
       return NextResponse.json(
         {
-          error: quota.error,
+          error: quota.error ?? "Quota exceeded", // ← add ?? fallback
           quota,
         },
         { status: 429 },
       );
     }
-
-    if (!quota) return "";
 
     const jsonOutput = await generateSceneJsonFromPrompt(prompt);
 
